@@ -19,6 +19,21 @@
   var inviewObjects = [], viewportSize, viewportOffset,
       d = document, w = window, documentElement = d.documentElement, timer;
 
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function () {
+      var context = this, args = arguments;
+      var later = function () {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  }
+
   $.event.special.inview = {
     add: function(data) {
       inviewObjects.push({ data: data, $element: $(this), element: this });
@@ -32,9 +47,8 @@
       //
       // Don't waste cycles with an interval until we get at least one element that
       // has bound to the inview event.
-      if (!timer && inviewObjects.length) {
-         timer = setInterval(checkInView, 250);
-      }
+      $(window).on('load', checkInView);
+      $(window).on('scroll', debounce(checkInView, 250));
     },
 
     remove: function(data) {
